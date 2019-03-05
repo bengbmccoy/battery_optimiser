@@ -74,47 +74,108 @@ def optimise_profile(index_peak_charge, battery_diff, new_profile):
 
     return  new_profile
 
+def get_data():
+    '''gets data from data/energydatayr.csv and returns a pandas dataframe
+    with the index as a datetime object'''
+
+    data = pd.read_csv('data/energydatayr.csv')
+    data.set_index('DateTime', inplace=True)
+    data.index = pd.to_datetime(data.index)
+
+    return data
+
+def get_list_days(data):
+    '''gets a list of unique days from the index of the dataframe'''
+
+    days = []
+    index_list = data.index.values
+    for item in index_list:
+        if str(item)[:10] not in days:
+            days.append(str(item)[:10])
+    return days
+
+def get_days_values_dict(data, days):
+    '''initislises a dictionary with the keys as unique days and the values
+    as empty lists. Then itereates through the data frame and appends any
+    consumption values from that day to the list with the dictionary'''
+
+    days_values_dict = {}
+    for day in days:
+        days_values_dict[day] = list()
+
+    for index, row in data.iterrows():
+        data_day = str(index)[:10]
+        days_values_dict[data_day].append(row['Value'])
+
+    return days_values_dict
+
 def main():
 
-    profile = [1,2,3,4,5,6,5,4,5,4,5,6,7,8,9,9,8,7,5,4,3,1]
-    new_profile = list(profile)
-    tariff = [1,1,1,1,1,1,1,2,2,2,2,2,2,2,4,4,4,4,4,4,2,2]
-    battery = 20
-    new_battery = int(battery)
-    battery_diff = 0.5
+    data = get_data()
+    # print data
 
-    while new_battery >= battery_diff:
+    days = get_list_days(data)
+    # print days
 
-        list_vol_charges = list_volume_charges(new_profile, tariff)
-        list_cap_charges = list_cpacity_charges(new_profile, 10)
-        list_sum_charges = list_summed_charges(list_vol_charges, list_cap_charges)
-        index_max_charge = index_peak_charge(list_sum_charges)
-        new_profile = optimise_profile(index_max_charge, battery_diff, new_profile)
-        new_battery = new_battery - battery_diff
-        # print list_sum_charges
-        # print sum(list_sum_charges)
+    days_values_dict = get_days_values_dict(data, days)
+    # print days_values_dict
+
+    opt_profile_dict = {}
+    for day in days:
+        opt_profile_dict[day] = days_values_dict[day]
+    print opt_profile_dict
+
+    for key, value in opt_profile_dict.iteritems():
+        print len(value)
+
+    ''' Below this part is the first part of this project that will be piped
+    to the second part when it is ready.
 
 
+    The below code is how to optimise one day at a time and
+    the above code is how to sort the data into manageable days
+
+
+    flag = False
+
+    # profile = [1,2,3,4,5,6,5,4,5,4,5,6,7,8,9,9,8,7,5,4,3,1]
+    # new_profile = list(profile)
+    # tariff = [1,1,1,1,1,1,1,2,2,2,2,2,2,2,4,4,4,4,4,4,2,2]
+    # battery = 50
+    # new_battery = int(battery)
+    # battery_diff = 0.25
+    # cap_cost = 2
+
+    if flag == True:
+        while new_battery >= battery_diff:
+
+            list_vol_charges = list_volume_charges(new_profile, tariff)
+            list_cap_charges = list_cpacity_charges(new_profile, cap_cost)
+            list_sum_charges = list_summed_charges(list_vol_charges, list_cap_charges)
+            index_max_charge = index_peak_charge(list_sum_charges)
+            new_profile = optimise_profile(index_max_charge, battery_diff, new_profile)
+            new_battery = new_battery - battery_diff
+            # print list_sum_charges
+            print sum(list_sum_charges)
+
+
+            y1 = new_profile
+            plt.plot(y1)
+            plt.ylim(0, max(profile))
+            plt.draw()
+            plt.pause(0.0001)
+            plt.clf()
+
+
+    if flag == True:
+        y = profile
         y1 = new_profile
-        # y2 = tariff
-        # y3 = profile
 
-        # plt.plot(range(len(y)), y3, label='old_profile')
-        # plt.plot(range(len(y)), y2, label='tariff')
-        # plt.plot(range(len(y1)), y1, label='new_profile')
-        plt.plot(y1)
-        plt.draw()
-        plt.pause(0.0001)
-        plt.clf()
+        plt.plot(range(len(y)), y, label='profile')
+        plt.plot(range(len(y1)), y1, label='new_profile')
+        plt.legend()
+        plt.show()
 
-    y = profile
-    y1 = new_profile
-
-    plt.plot(range(len(y)), y, label='profile')
-    plt.plot(range(len(y1)), y1, label='new_profile')
-    # plt.legend()
-    plt.show()
-    #
-    # # pr.read_csv('data.csv')
+    '''
 
 main()
